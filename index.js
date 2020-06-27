@@ -1,115 +1,102 @@
 const express = require('express')
-const morgan = require('morgan')
 const app = express()
+require('dotenv').config()
+const morgan = require('morgan')
+const Event = require('./models/event')
+
 const cors = require('cors')
 
 app.use(cors())
 app.use(express.json())
 app.use(morgan())
 
-let events = [
-  {
-    id: 1,
-    title: 'Coding together',
-    date: '2019-05-30T17:30:31.098Z',
-    price: 0,
-    organizer: 'Bill Smith',
-    capacity: 100,
-    description: "Let's code together, it will be fun!",
-    group: 'Web developers'
-  },
-  {
-    id: 2,
-    title: 'Basic CSS',
-    date: '2019-05-30T17:30:31.098Z',
-    price: 10.0,
-    organizer: 'Olla Fiu',
-    capacity: 25,
-    description: 'Learn basics of styling with CSS',
-    group: 'Web developers'
-  },
-  {
-    id: 3,
-    title: 'Singing together',
-    date: '2019-05-30T17:30:31.098Z',
-    price: 0,
-    organizer: 'Oscar Han',
-    capacity: 200,
-    description: "Let's sing together, it will be fun!",
-    group: 'Musical people'
-  }
-]
-
-app.use(function(req, res, next) {
-  console.log('Method:', req.method)
-  console.log('Path:  ', req.path)
-  console.log('Body:  ', req.body)
-  console.log('---')
-  next()
-})
-
-app.get('/', (req, res) => {
-  res.send('<h1>Events</h1>')
-})
-
 app.get('/api/events', (req, res) => {
-  res.json(events)
+  Event.find({}).then(events => {
+    res.json(events.map(event => event.toJSON()))
+  })
 })
 
-app.get('/api/events/:id', (req, res) => {
-  const id = +req.params.id
-  const event = events.find(event => event.id === id)
-  if (event) {
-    res.json(event)
-  } else {
-    res.status(404).end()
-  }
-})
-
-app.post('/api/events', (req, res) => {
+app.post('/api/events', (req, res, next) => {
   const body = req.body
-  if (!body.date) {
-    return res.status(400).json({
-      error: 'Date missing'
-    })
-  } else if (!body.title) {
-    return res.status(400).json({
-      error: 'Title missing'
-    })
-  } else if (!body.description) {
-    return res.status(400).json({
-      error: 'Description missing'
-    })
-  } else if (!body.capacity) {
-    return res.status(400).json({
-      error: 'Capacity missing'
-    })
-  }
-  const event = {
+
+  const event = new Event({
     date: body.date || new Date(),
-    id: events.length + 1,
     title: body.title,
     price: body.price || 0,
     organizer: body.organizer,
     capacity: body.capacity,
     description: body.description,
-    group: body.group
-  }
-  events = events.concat(event)
-  res.json(event)
+    group: body.group,
+    place: body.place
+  })
+
+  event
+    .save()
+    .then(savedEvent => savedEvent.toJSON())
+    .then(savedAndFormattedEvent => {
+      res.json(savedAndFormattedEvent)
+    })
+    .catch(error => next(error))
 })
 
-app.delete('/api/events/:id', (req, res) => {
-  const id = +req.params.id
-  events = events.filter(event => event.id !== id)
-  res.status(204).end()
+app.get('/api/events/:id', (req, res, next) => {
+  Event.findById(req.params.id)
+    .then(event => {
+      if (event) {
+        res.json(event.toJSON())
+      } else {
+        res.status(404).end()
+      }
+    })
+    .catch(err => next(err))
+})
+
+app.delete('/api/events/:id', (req, res, next) => {
+  Event.findByIdAndRemove(req.params.id)
+    .then(result => {
+      res.status(204).end()
+    })
+    .catch(err => next(err))
+})
+
+app.put('/api/events/:id', (req, res, next) => {
+  const body = req.body
+
+  const event = {
+    date: body.date,
+    title: body.title,
+    price: body.price,
+    organizer: body.organizer,
+    capacity: body.capacity,
+    description: body.description,
+    group: body.group
+  }
+
+  Event.findByIdAndUpdate(req.params.id, event, { new: true })
+    .then(updatedEvent => {
+      res.json(updatedEvent.toJSON())
+    })
+    .catch(err => next(err))
 })
 
 app.use(function(req, res, next) {
   res.status(404).send({ error: 'unknown endpoint' })
 })
 
-const PORT = 3001
+const errorHandler = (err, req, res, next) => {
+  console.error(err.message)
+
+  if (err.name === 'CastError' && err.kind == 'ObjectId') {
+    return res.status(400).send({ err: 'malformatted id' })
+  } else if (err.name === 'ValidationError') {
+    return res.status(400).json({ err: err.message })
+  }
+  next(err)
+}
+
+app.use(errorHandler)
+
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`)
 })
