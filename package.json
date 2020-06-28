@@ -4,19 +4,26 @@
   "description": "meetups app backend",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
-    "lint": "eslint ."
+    "start": "cross-env NODE_ENV=development nodemon index.js",
+    "lint": "eslint .",
+    "test": "cross-env NODE_ENV=test jest --verbose --runInBand"
   },
   "author": "Maja Kulpa-Malecka",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
+    "cross-env": "^7.0.2",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "mongoose": "^5.9.20",
     "morgan": "^1.10.0"
   },
   "devDependencies": {
-    "eslint": "^7.3.1"
+    "eslint": "^7.3.1",
+    "jest": "^26.1.0",
+    "supertest": "^4.0.2"
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }
