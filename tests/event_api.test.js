@@ -8,11 +8,9 @@ const Event = require('./../models/event')
 beforeEach(async () => {
   await Event.deleteMany({})
 
-  let eventObject = new Event(helper.initialEvents[0])
-  await eventObject.save()
-
-  eventObject = new Event(helper.initialEvents[1])
-  await eventObject.save()
+  const eventObjects = helper.initialEvents.map(event => new Event(event))
+  const promiseArray = eventObjects.map(event => event.save())
+  await Promise.all(promiseArray)
 })
 
 test('events are saved as json', async () => {
@@ -22,24 +20,6 @@ test('events are saved as json', async () => {
     .set('Accept', 'application/json')
     .expect(200)
     .expect('Content-Type', /application\/json/)
-})
-
-test('event without required fields is not added', async () => {
-  const newEvent = {
-    price: 9.99,
-    organizer: 'Alan Kowalski',
-    group: 'Tests',
-    place: 'Melbourne'
-  }
-
-  await api
-    .post('/api/events')
-    .send(newEvent)
-    .expect(400)
-
-  const eventsAtEnd = await helper.eventsInDb()
-
-  expect(eventsAtEnd).toHaveLength(helper.initialEvents.length)
 })
 
 test('events are returned as json', async () => {
@@ -63,6 +43,23 @@ test('a specific event is within returned events', async () => {
   expect(titles).toContain('First Test Event')
 })
 
+test('event without required fields is not added', async () => {
+  const newEvent = {
+    price: 9.99,
+    organizer: 'Alan Kowalski',
+    group: 'Tests',
+    place: 'Melbourne'
+  }
+
+  await api
+    .post('/api/events')
+    .send(newEvent)
+    .expect(400)
+
+  const eventsAtEnd = await helper.eventsInDb()
+  expect(eventsAtEnd).toHaveLength(helper.initialEvents.length)
+})
+
 test('a specific event can be viewed', async () => {
   const eventsAtStart = await helper.eventsInDb()
 
@@ -73,7 +70,7 @@ test('a specific event can be viewed', async () => {
     .expect(200)
     .expect('Content-Type', /application\/json/)
 
-  expect(resultEvent.body.description).toEqual(eventToView.description)
+  expect(resultEvent.body).toEqual(eventToView)
 })
 
 test('a event can be deleted', async () => {
