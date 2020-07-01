@@ -1,5 +1,5 @@
 const eventsRouter = require('express').Router()
-const Event = require('./../models/event')
+const Event = require('../models/events')
 
 eventsRouter.get('/', async (req, res) => {
   const events = await Event.find({})
