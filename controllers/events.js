@@ -1,5 +1,6 @@
 const eventsRouter = require('express').Router()
 const Event = require('../models/events')
+const User = require('../models/users')
 
 eventsRouter.get('/', async (req, res) => {
   const events = await Event.find({})
@@ -9,11 +10,13 @@ eventsRouter.get('/', async (req, res) => {
 eventsRouter.post('/', async (req, res) => {
   const body = req.body
 
+  const user = await User.findById(body.userId)
+
   const event = new Event({
     date: body.date,
     title: body.title,
     price: body.price || 0,
-    organizer: body.organizer,
+    user: user._id,
     capacity: body.capacity,
     description: body.description,
     group: body.group,
@@ -21,6 +24,9 @@ eventsRouter.post('/', async (req, res) => {
   })
 
   const savedEvent = await event.save()
+  user.events = user.events.concat(savedEvent._id)
+  await user.save()
+
   res.json(savedEvent.toJSON())
 })
 

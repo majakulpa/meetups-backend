@@ -13,7 +13,10 @@ const eventSchema = new mongoose.Schema({
     required: true
   },
   price: Number,
-  organizer: String,
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   capacity: {
     type: Number,
     required: true

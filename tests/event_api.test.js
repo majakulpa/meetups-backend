@@ -50,7 +50,7 @@ describe('creating events', () => {
       date: new Date(),
       title: 'New Test Event',
       price: 9.99,
-      organizer: 'Olla Smith',
+      user: 'Olla Smith',
       capacity: 100,
       description: 'Second Test Event description',
       group: 'Tests',
