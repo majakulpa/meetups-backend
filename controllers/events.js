@@ -1,16 +1,25 @@
+const jwt = require('jsonwebtoken')
 const eventsRouter = require('express').Router()
 const Event = require('../models/events')
 const User = require('../models/users')
 
-eventsRouter.get('/', async (req, res) => {
-  const events = await Event.find({})
-  res.json(events.map(event => event.toJSON()))
-})
+const getTokenFrom = req => {
+  const authorization = req.get('authorization')
+  if (authorization && authorization.toLowerCase().startsWith('bearer')) {
+    return authorization.substring(7)
+  }
+  return null
+}
 
 eventsRouter.post('/', async (req, res) => {
   const body = req.body
+  const token = getTokenFrom(req)
+  const decodedToken = jwt.verify(token, process.env.SECRET)
+  if (!token || !decodedToken.id) {
+    return res.status(401).json({ error: 'token missing or invalid' })
+  }
 
-  const user = await User.findById(body.userId)
+  const user = await User.findById(decodedToken.id)
 
   const event = new Event({
     date: body.date,
@@ -30,6 +39,11 @@ eventsRouter.post('/', async (req, res) => {
   res.json(savedEvent.toJSON())
 })
 
+eventsRouter.get('/', async (req, res) => {
+  const events = await Event.find({}).populate('user', { name: 1, email: 1 })
+  res.json(events.map(event => event.toJSON()))
+})
+
 eventsRouter.get('/:id', async (req, res) => {
   const event = await Event.findById(req.params.id)
   if (event) {
@@ -40,6 +54,18 @@ eventsRouter.get('/:id', async (req, res) => {
 })
 
 eventsRouter.delete('/:id', async (req, res) => {
+  const token = getTokenFrom(req)
+  const decodedToken = jwt.verify(token, process.env.SECRET)
+  const event = await Event.findById(req.params.id)
+  console.log('event', event)
+  if (!token || !decodedToken.id) {
+    return res.status(401).json({ error: 'token missing or invalid' })
+  } else if (event.user.toString() !== decodedToken.id) {
+    return res
+      .status(401)
+      .json({ error: "you don't have permission to delete this event" })
+  }
+
   await Event.findByIdAndRemove(req.params.id)
   res.status(204).end()
 })

@@ -12,7 +12,12 @@ describe('when there is initially one user in db', () => {
     await User.deleteMany({})
 
     const passwordHash = await bcrypt.hash('sekret', 10)
-    const user = new User({ username: 'alan', passwordHash })
+    const user = new User({
+      username: 'alan',
+      name: 'Alan',
+      email: 'alan@example.com',
+      passwordHash
+    })
 
     await user.save()
   })
@@ -41,7 +46,7 @@ describe('when there is initially one user in db', () => {
     expect(usernames).toContain(newUser.username)
   })
 
-  test('creation fails with proper statuscode if username already exists', async () => {
+  test('creation fails with code 400 if username already exists', async () => {
     const usersAtStart = await helper.usersInDb()
 
     const newUser = {
@@ -58,11 +63,57 @@ describe('when there is initially one user in db', () => {
       .expect(400)
       .expect('Content-Type', /application\/json/)
 
-    console.log('err', result.body.error)
     expect(result.body.err).toContain('`username` to be unique')
 
     const usersAtEnd = await helper.usersInDb()
     expect(usersAtEnd.length).toBe(usersAtStart.length)
+  })
+
+  test('creation fails with code 400 if email already exists', async () => {
+    const usersAtStart = await helper.usersInDb()
+
+    const newUser = {
+      username: 'superuser',
+      name: 'Mikola Legolas',
+      email: 'alan@example.com',
+      password: 'mikolas'
+    }
+
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .set('Accept', 'application/json')
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    expect(result.body.err).toContain('`email` to be unique')
+
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd.length).toBe(usersAtStart.length)
+  })
+})
+
+describe('Returning all users', () => {
+  test('users are returned as json', async () => {
+    await api
+      .get('/api/users')
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+  })
+
+  test('all users are returned', async () => {
+    const response = await api.get('/api/users')
+    const users = await helper.usersInDb()
+
+    expect(response.body).toHaveLength(users.length)
+  })
+
+  test('a specific user is within returned users', async () => {
+    const response = await api.get('/api/users')
+
+    const usernames = response.body.map(r => r.username)
+
+    expect(usernames).toContain('alan')
   })
 })
 
