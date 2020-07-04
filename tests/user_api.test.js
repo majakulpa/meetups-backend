@@ -1,28 +1,24 @@
 const supertest = require('supertest')
 const mongoose = require('mongoose')
 const helper = require('./test_helpers')
-const bcrypt = require('bcrypt')
 const app = require('./../app')
 const api = supertest(app)
 
 const User = require('./../models/users')
 
+beforeEach(async done => {
+  await User.deleteMany({})
+
+  for (let user of helper.initialUsers) {
+    let userObject = new User(user)
+    await userObject.save()
+  }
+
+  done()
+})
+
 describe('when there is initially one user in db', () => {
-  beforeEach(async () => {
-    await User.deleteMany({})
-
-    const passwordHash = await bcrypt.hash('sekret', 10)
-    const user = new User({
-      username: 'alan',
-      name: 'Alan',
-      email: 'alan@example.com',
-      passwordHash
-    })
-
-    await user.save()
-  })
-
-  test('creation succeeds with a fresh username', async () => {
+  test('creation succeeds with a fresh username', async done => {
     const usersAtStart = await helper.usersInDb()
 
     const newUser = {
@@ -44,13 +40,14 @@ describe('when there is initially one user in db', () => {
 
     const usernames = usersAtEnd.map(user => user.username)
     expect(usernames).toContain(newUser.username)
+    done()
   })
 
   test('creation fails with code 400 if username already exists', async () => {
     const usersAtStart = await helper.usersInDb()
 
     const newUser = {
-      username: 'alan',
+      username: usersAtStart[0].username,
       name: 'Mikola Legolas',
       email: 'miko@example',
       password: 'mikolas'
@@ -64,18 +61,15 @@ describe('when there is initially one user in db', () => {
       .expect('Content-Type', /application\/json/)
 
     expect(result.body.err).toContain('`username` to be unique')
-
-    const usersAtEnd = await helper.usersInDb()
-    expect(usersAtEnd.length).toBe(usersAtStart.length)
   })
 
-  test('creation fails with code 400 if email already exists', async () => {
+  test('creation fails with code 400 if email already exists', async done => {
     const usersAtStart = await helper.usersInDb()
 
     const newUser = {
       username: 'superuser',
       name: 'Mikola Legolas',
-      email: 'alan@example.com',
+      email: usersAtStart[0].email,
       password: 'mikolas'
     }
 
@@ -88,35 +82,38 @@ describe('when there is initially one user in db', () => {
 
     expect(result.body.err).toContain('`email` to be unique')
 
-    const usersAtEnd = await helper.usersInDb()
-    expect(usersAtEnd.length).toBe(usersAtStart.length)
+    done()
   })
 })
 
 describe('Returning all users', () => {
-  test('users are returned as json', async () => {
+  test('users are returned as json', async done => {
     await api
       .get('/api/users')
       .expect(200)
       .expect('Content-Type', /application\/json/)
+    done()
   })
 
-  test('all users are returned', async () => {
+  test('all users are returned', async done => {
     const response = await api.get('/api/users')
     const users = await helper.usersInDb()
 
     expect(response.body).toHaveLength(users.length)
+    done()
   })
 
-  test('a specific user is within returned users', async () => {
+  test('a specific user is within returned users', async done => {
     const response = await api.get('/api/users')
 
     const usernames = response.body.map(r => r.username)
 
-    expect(usernames).toContain('alan')
+    expect(usernames).toContain('marika')
+    done()
   })
 })
 
-afterAll(() => {
+afterAll(done => {
   mongoose.connection.close()
+  done()
 })

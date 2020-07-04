@@ -57,7 +57,7 @@ eventsRouter.delete('/:id', async (req, res) => {
   const token = getTokenFrom(req)
   const decodedToken = jwt.verify(token, process.env.SECRET)
   const event = await Event.findById(req.params.id)
-  console.log('event', event)
+
   if (!token || !decodedToken.id) {
     return res.status(401).json({ error: 'token missing or invalid' })
   } else if (event.user.toString() !== decodedToken.id) {

@@ -22,6 +22,21 @@ const initialEvents = [
   }
 ]
 
+const initialUsers = [
+  {
+    username: 'marika',
+    name: 'Marika',
+    email: 'marika@example.com',
+    password: 'marika'
+  },
+  {
+    username: 'marek',
+    name: 'Marek',
+    email: 'mar@example.com',
+    password: 'marek'
+  }
+]
+
 const nonExistingId = async () => {
   const event = new Event({
     date: new Date(),
@@ -50,6 +65,7 @@ const usersInDb = async () => {
 
 module.exports = {
   initialEvents,
+  initialUsers,
   nonExistingId,
   eventsInDb,
   usersInDb
