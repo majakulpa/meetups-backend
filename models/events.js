@@ -29,7 +29,6 @@ const eventSchema = new mongoose.Schema({
   group: String,
   place: {
     type: String,
-
     required: true
   }
 })

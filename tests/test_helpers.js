@@ -34,10 +34,16 @@ const initialUsers = [
     name: 'Marek',
     email: 'mar@example.com',
     password: 'marek'
+  },
+  {
+    username: 'jolanda',
+    name: 'Jolanda',
+    email: 'jola@example.com',
+    password: 'jolanda'
   }
 ]
 
-const nonExistingId = async () => {
+const nonExistingEventId = async () => {
   const event = new Event({
     date: new Date(),
     title: 'Third Test Event',
@@ -53,6 +59,19 @@ const nonExistingId = async () => {
   return event._id.toString()
 }
 
+const nonExistingUserId = async () => {
+  const user = new User({
+    username: 'usertest',
+    name: 'usertest',
+    email: 'usertest@example.com',
+    password: 'usertest'
+  })
+
+  await user.save()
+  await user.remove()
+  return user._id.toString()
+}
+
 const eventsInDb = async () => {
   const events = await Event.find({})
   return events.map(event => event.toJSON())
@@ -66,7 +85,8 @@ const usersInDb = async () => {
 module.exports = {
   initialEvents,
   initialUsers,
-  nonExistingId,
+  nonExistingEventId,
+  nonExistingUserId,
   eventsInDb,
   usersInDb
 }

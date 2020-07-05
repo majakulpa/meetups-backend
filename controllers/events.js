@@ -11,6 +11,8 @@ const getTokenFrom = req => {
   return null
 }
 
+const check = (token, decodedToken, event, res) => {}
+
 eventsRouter.post('/', async (req, res) => {
   const body = req.body
   const token = getTokenFrom(req)
@@ -58,36 +60,59 @@ eventsRouter.delete('/:id', async (req, res) => {
   const decodedToken = jwt.verify(token, process.env.SECRET)
   const event = await Event.findById(req.params.id)
 
-  if (!token || !decodedToken.id) {
+  if (!event) {
+    return res.status(404).json({ error: "this event doesn't exist" })
+  } else if (!token || !decodedToken.id) {
     return res.status(401).json({ error: 'token missing or invalid' })
   } else if (event.user.toString() !== decodedToken.id) {
     return res
       .status(401)
-      .json({ error: "you don't have permission to delete this event" })
+      .json({ error: "you don't have permission to perform this action" })
   }
 
   await Event.findByIdAndRemove(req.params.id)
   res.status(204).end()
 })
 
-eventsRouter.put('/:id', (req, res, next) => {
-  const body = req.body
+eventsRouter.patch('/:id', async (req, res) => {
+  const token = getTokenFrom(req)
+  const decodedToken = jwt.verify(token, process.env.SECRET)
+  const event = await Event.findById(req.params.id)
 
-  const event = {
-    date: body.date,
-    title: body.title,
-    price: body.price,
-    organizer: body.organizer,
-    capacity: body.capacity,
-    description: body.description,
-    group: body.group
+  if (!event) {
+    return res.status(404).json({ error: "this event doesn't exist" })
+  } else if (!token || !decodedToken.id) {
+    return res.status(401).json({ error: 'token missing or invalid' })
+  } else if (event.user.toString() !== decodedToken.id) {
+    return res
+      .status(401)
+      .json({ error: "you don't have permission to perform this action" })
   }
 
-  Event.findByIdAndUpdate(req.params.id, event, { new: true })
-    .then(updatedEvent => {
-      res.json(updatedEvent.toJSON())
-    })
-    .catch(err => next(err))
+  const body = req.body
+  const eventToUpdate = await Event.findById(req.params.id)
+
+  if (body.title) {
+    eventToUpdate.title = body.title
+  }
+  if (body.date) {
+    eventToUpdate.date = body.date
+  }
+  if (body.price) {
+    eventToUpdate.price = body.price
+  }
+  if (body.capacity) {
+    eventToUpdate.capacity = body.capacity
+  }
+  if (body.description) {
+    eventToUpdate.description = body.description
+  }
+  if (body.place) {
+    eventToUpdate.place = body.place
+  }
+
+  const savedEvent = await eventToUpdate.save()
+  res.json(savedEvent.toJSON())
 })
 
 module.exports = eventsRouter

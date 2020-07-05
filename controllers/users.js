@@ -25,4 +25,18 @@ usersRouter.get('/', async (req, res) => {
   res.json(users.map(user => user.toJSON()))
 })
 
+usersRouter.get('/:id', async (req, res) => {
+  const user = await User.findById(req.params.id)
+  if (user) {
+    res.json(user.toJSON())
+  } else {
+    res.status(404).end()
+  }
+})
+
+usersRouter.delete('/:id', async (req, res) => {
+  await User.findByIdAndRemove(req.params.id)
+  res.status(204).end()
+})
+
 module.exports = usersRouter
