@@ -11,8 +11,6 @@ const getTokenFrom = req => {
   return null
 }
 
-const check = (token, decodedToken, event, res) => {}
-
 eventsRouter.post('/', async (req, res) => {
   const body = req.body
   const token = getTokenFrom(req)

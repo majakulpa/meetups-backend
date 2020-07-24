@@ -26,7 +26,10 @@ usersRouter.get('/', async (req, res) => {
 })
 
 usersRouter.get('/:id', async (req, res) => {
-  const user = await User.findById(req.params.id)
+  const user = await User.findById(req.params.id).populate('events', {
+    title: 1,
+    date: 1
+  })
   if (user) {
     res.json(user.toJSON())
   } else {
