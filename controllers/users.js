@@ -12,6 +12,7 @@ usersRouter.post('/', async (req, res) => {
     username: body.username,
     name: body.name,
     email: body.email,
+    description: body.description,
     passwordHash
   })
 
@@ -40,6 +41,33 @@ usersRouter.get('/:id', async (req, res) => {
 usersRouter.delete('/:id', async (req, res) => {
   await User.findByIdAndRemove(req.params.id)
   res.status(204).end()
+})
+
+usersRouter.patch('/:id', async (req, res) => {
+  const user = await User.findById(req.params.id)
+
+  if (!user) {
+    res.status(404).end()
+  }
+
+  const body = req.body
+  const userToUpdate = await User.findById(req.params.id)
+
+  if (body.name) {
+    userToUpdate.name = body.name
+  }
+  if (body.username) {
+    userToUpdate.username = body.username
+  }
+  if (body.email) {
+    userToUpdate.email = body.email
+  }
+  if (body.description) {
+    userToUpdate.description = body.description
+  }
+
+  const savedUser = await userToUpdate.save()
+  res.json(savedUser.toJSON())
 })
 
 module.exports = usersRouter

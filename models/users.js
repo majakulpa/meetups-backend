@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true
   },
+  description: String,
   passwordHash: String,
   events: [
     {
