@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken')
 const eventsRouter = require('express').Router()
 const Event = require('../models/events')
 const User = require('../models/users')
+const Booking = require('../models/bookings')
 
 const getTokenFrom = req => {
   const authorization = req.get('authorization')
@@ -40,15 +41,19 @@ eventsRouter.post('/', async (req, res) => {
 })
 
 eventsRouter.get('/', async (req, res) => {
-  const events = await Event.find({}).populate('user', { name: 1, email: 1 })
+  const events = await Event.find({})
+    .populate('user', { name: 1, email: 1 })
+    .populate('attendees', { name: 1, email: 1 })
   res.json(events.map(event => event.toJSON()))
 })
 
 eventsRouter.get('/:id', async (req, res) => {
-  const event = await Event.findById(req.params.id).populate('user', {
-    name: 1,
-    email: 1
-  })
+  const event = await Event.findById(req.params.id)
+    .populate('user', {
+      name: 1,
+      email: 1
+    })
+    .populate('attendees', { name: 1, email: 1 })
   if (event) {
     res.json(event.toJSON())
   } else {
@@ -114,6 +119,36 @@ eventsRouter.patch('/:id', async (req, res) => {
 
   const savedEvent = await eventToUpdate.save()
   res.json(savedEvent.toJSON())
+})
+
+// book event
+eventsRouter.post('/:id', async (req, res) => {
+  const token = getTokenFrom(req)
+  const decodedToken = jwt.verify(token, process.env.SECRET)
+  if (!token || !decodedToken.id) {
+    return res.status(401).json({ error: 'token missing or invalid' })
+  }
+
+  const user = await User.findById(decodedToken.id)
+  const event = await Event.findById(req.params.id)
+
+  const booking = new Booking({
+    user: user._id,
+    event: event._id
+  })
+
+  user.bookedEvents = user.bookedEvents.concat(booking._id)
+  if (!event.attendees.includes(user._id)) {
+    event.attendees = event.attendees.concat(user._id)
+  } else {
+    return res.status(404).json({ error: 'You already booked this event' })
+  }
+
+  await booking.save()
+  await user.save()
+  await event.save()
+
+  res.json(event.toJSON())
 })
 
 module.exports = eventsRouter

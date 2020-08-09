@@ -30,7 +30,13 @@ const eventSchema = new mongoose.Schema({
   place: {
     type: String,
     required: true
-  }
+  },
+  attendees: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }
+  ]
 })
 
 eventSchema.set('toJSON', {
