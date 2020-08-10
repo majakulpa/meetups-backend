@@ -1,7 +1,5 @@
 const jwt = require('jsonwebtoken')
 const bookingsRouter = require('express').Router()
-const Event = require('../models/events')
-const User = require('../models/users')
 const Booking = require('../models/bookings')
 
 const getTokenFrom = req => {
