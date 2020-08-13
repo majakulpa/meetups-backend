@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken')
 const bookingsRouter = require('express').Router()
 const Booking = require('../models/bookings')
+const Event = require('../models/events')
+const User = require('../models/users')
 
 const getTokenFrom = req => {
   const authorization = req.get('authorization')
@@ -38,6 +40,8 @@ bookingsRouter.delete('/:id', async (req, res) => {
   const token = getTokenFrom(req)
   const decodedToken = jwt.verify(token, process.env.SECRET)
   const booking = await Booking.findById(req.params.id)
+  const event = await Event.findById(booking.event)
+  const user = await User.findById(decodedToken.id)
 
   if (!booking) {
     return res.status(404).json({ error: "this booking doesn't exist" })
@@ -49,6 +53,8 @@ bookingsRouter.delete('/:id', async (req, res) => {
       .json({ error: "you don't have permission to perform this action" })
   }
 
+  await event.attendees.remove(user._id)
+  await event.save()
   await Booking.findByIdAndRemove(req.params.id)
   res.status(204).end()
 })
