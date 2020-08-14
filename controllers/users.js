@@ -1,6 +1,8 @@
 const bcrypt = require('bcrypt')
 const usersRouter = require('express').Router()
 const User = require('./../models/users')
+const Booking = require('./../models/bookings')
+const Event = require('./../models/events')
 
 usersRouter.post('/', async (req, res) => {
   const body = req.body
@@ -34,7 +36,14 @@ usersRouter.get('/:id', async (req, res) => {
       title: 1,
       date: 1
     })
-    .populate('bookedEvents', { user: 1, event: 1 })
+    .populate({
+      path: 'bookedEvents',
+      model: Booking,
+      populate: {
+        path: 'event',
+        model: Event
+      }
+    })
   if (user) {
     res.json(user.toJSON())
   } else {
