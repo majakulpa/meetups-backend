@@ -3,6 +3,7 @@ const usersRouter = require('express').Router()
 const User = require('./../models/users')
 const Booking = require('./../models/bookings')
 const Event = require('./../models/events')
+const Group = require('../models/groups')
 
 usersRouter.post('/', async (req, res) => {
   const body = req.body
@@ -15,8 +16,15 @@ usersRouter.post('/', async (req, res) => {
     name: body.name,
     email: body.email,
     description: body.description,
+    groups: body.groups,
     passwordHash
   })
+
+  for (let i = 0; i < user.groups.length; i++) {
+    let group = await Group.findById(user.groups[i])
+    group.members = group.members.concat(user._id)
+    await group.save()
+  }
 
   const savedUser = await user.save()
 
@@ -27,6 +35,8 @@ usersRouter.get('/', async (req, res) => {
   const users = await User.find({})
     .populate('events', { title: 1, date: 1 })
     .populate('bookedEvents', { user: 1, event: 1 })
+    .populate('createdGroups', { name: 1 })
+    .populate('groups', { name: 1 })
   res.json(users.map(user => user.toJSON()))
 })
 
@@ -44,6 +54,8 @@ usersRouter.get('/:id', async (req, res) => {
         model: Event
       }
     })
+    .populate('createdGroups', { name: 1 })
+    .populate('groups', { name: 1 })
   if (user) {
     res.json(user.toJSON())
   } else {
@@ -77,6 +89,14 @@ usersRouter.patch('/:id', async (req, res) => {
   }
   if (body.description) {
     userToUpdate.description = body.description
+  }
+  if (body.groups) {
+    userToUpdate.groups = body.groups
+    for (let i = 0; i < userToUpdate.groups.length; i++) {
+      let group = await Group.findById(userToUpdate.groups[i])
+      group.members = group.members.concat(userToUpdate._id)
+      await group.save()
+    }
   }
 
   const savedUser = await userToUpdate.save()

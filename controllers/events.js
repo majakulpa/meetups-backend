@@ -3,6 +3,7 @@ const eventsRouter = require('express').Router()
 const Event = require('../models/events')
 const User = require('../models/users')
 const Booking = require('../models/bookings')
+const Group = require('../models/groups')
 
 const getTokenFrom = req => {
   const authorization = req.get('authorization')
@@ -29,9 +30,15 @@ eventsRouter.post('/', async (req, res) => {
     user: user._id,
     capacity: body.capacity,
     description: body.description,
-    group: body.group,
+    groups: body.groups,
     place: body.place
   })
+
+  for (let i = 0; i < event.groups.length; i++) {
+    let group = await Group.findById(event.groups[i])
+    group.events = group.events.concat(event._id)
+    await group.save()
+  }
 
   const savedEvent = await event.save()
   user.events = user.events.concat(savedEvent._id)
@@ -44,6 +51,7 @@ eventsRouter.get('/', async (req, res) => {
   const events = await Event.find({})
     .populate('user', { name: 1, email: 1 })
     .populate('attendees', { name: 1, email: 1 })
+    .populate('groups', { name: 1 })
   res.json(events.map(event => event.toJSON()))
 })
 
@@ -54,6 +62,7 @@ eventsRouter.get('/:id', async (req, res) => {
       email: 1
     })
     .populate('attendees', { name: 1, email: 1 })
+    .populate('groups', { name: 1 })
   if (event) {
     res.json(event.toJSON())
   } else {
@@ -116,12 +125,20 @@ eventsRouter.patch('/:id', async (req, res) => {
   if (body.place) {
     eventToUpdate.place = body.place
   }
+  if (body.groups) {
+    eventToUpdate.groups = body.groups
+    for (let i = 0; i < body.groups.length; i++) {
+      let group = await Group.findById(body.groups[i])
+      group.events = group.events.concat(eventToUpdate._id)
+      await group.save()
+    }
+  }
 
   const savedEvent = await eventToUpdate.save()
   res.json(savedEvent.toJSON())
 })
 
-// book event
+// book en event
 eventsRouter.post('/:id', async (req, res) => {
   const token = getTokenFrom(req)
   const decodedToken = jwt.verify(token, process.env.SECRET)

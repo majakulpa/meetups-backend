@@ -26,7 +26,12 @@ const eventSchema = new mongoose.Schema({
     minlength: 10,
     required: true
   },
-  group: String,
+  groups: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Group'
+    }
+  ],
   place: {
     type: String,
     required: true
