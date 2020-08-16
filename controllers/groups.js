@@ -83,7 +83,7 @@ groupsRouter.patch('/:id', async (req, res) => {
   const group = await Group.findById(req.params.id)
 
   if (!group) {
-    return res.status(404).json({ error: "this event doesn't exist" })
+    return res.status(404).json({ error: "this group doesn't exist" })
   } else if (!token || !decodedToken.id) {
     return res.status(401).json({ error: 'token missing or invalid' })
   } else if (group.creator.toString() !== decodedToken.id) {
@@ -127,6 +127,30 @@ groupsRouter.post('/:id', async (req, res) => {
   await group.save()
 
   res.json(user.toJSON())
+})
+
+//leave the group
+groupsRouter.delete('/:id/unsubscribe', async (req, res) => {
+  const token = getTokenFrom(req)
+  const decodedToken = jwt.verify(token, process.env.SECRET)
+  const group = await Group.findById(req.params.id)
+  const user = await User.findById(decodedToken.id)
+
+  if (!group) {
+    return res.status(404).json({ error: "this group doesn't exist" })
+  } else if (!token || !decodedToken.id) {
+    return res.status(401).json({ error: 'token missing or invalid' })
+  } else if (!group.members.includes(user._id)) {
+    return res
+      .status(401)
+      .json({ error: "you don't have permission to perform this action" })
+  }
+
+  await user.groups.remove(group._id)
+  await group.members.remove(user._id)
+  await user.save()
+  await group.save()
+  res.status(204).end()
 })
 
 module.exports = groupsRouter
