@@ -125,11 +125,27 @@ eventsRouter.patch('/:id', async (req, res) => {
   if (body.place) {
     eventToUpdate.place = body.place
   }
-  if (body.groups) {
+
+  if (body.groups.length > 0) {
     eventToUpdate.groups = body.groups
-    for (let i = 0; i < body.groups.length; i++) {
-      let group = await Group.findById(body.groups[i])
-      group.events = group.events.concat(eventToUpdate._id)
+    let allGroups = await Group.find({})
+    let allFilteredGroups = allGroups.filter(
+      group => !eventToUpdate.groups.includes(group._id)
+    )
+    for (let j = 0; j < allFilteredGroups.length; j++) {
+      let oneGroup = allFilteredGroups[j]
+      if (oneGroup.events.includes(eventToUpdate._id)) {
+        oneGroup.events.remove(eventToUpdate._id)
+      }
+      await oneGroup.save()
+    }
+
+    for (let i = 0; i < eventToUpdate.groups.length; i++) {
+      let group = await Group.findById(eventToUpdate.groups[i])
+      if (!group.events.includes(eventToUpdate._id)) {
+        group.events = group.events.concat(eventToUpdate._id)
+      }
+
       await group.save()
     }
   }

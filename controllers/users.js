@@ -90,14 +90,6 @@ usersRouter.patch('/:id', async (req, res) => {
   if (body.description) {
     userToUpdate.description = body.description
   }
-  if (body.groups) {
-    userToUpdate.groups = body.groups
-    for (let i = 0; i < userToUpdate.groups.length; i++) {
-      let group = await Group.findById(userToUpdate.groups[i])
-      group.members = group.members.concat(userToUpdate._id)
-      await group.save()
-    }
-  }
 
   const savedUser = await userToUpdate.save()
   res.json(savedUser.toJSON())
