@@ -126,7 +126,7 @@ eventsRouter.patch('/:id', async (req, res) => {
     eventToUpdate.place = body.place
   }
 
-  if (body.groups.length > 0) {
+  if (body.groups && body.groups.length > 0) {
     eventToUpdate.groups = body.groups
     let allGroups = await Group.find({})
     let allFilteredGroups = allGroups.filter(

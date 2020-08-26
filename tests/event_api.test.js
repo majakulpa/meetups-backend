@@ -8,11 +8,13 @@ const api = supertest(app)
 
 const Event = require('../models/events')
 const User = require('../models/users')
+const Group = require('../models/groups')
 
 let userId = null
 let loginInfo = null
 let newLoginInfo = null
 let eventsAtStart = null
+let groupsAtStart = null
 let eventToTakeActions = null
 
 const newEvent = {
@@ -21,7 +23,11 @@ const newEvent = {
 }
 
 beforeEach(async () => {
-  await Promise.all([Event.deleteMany({}), User.deleteMany({})])
+  await Promise.all([
+    Event.deleteMany({}),
+    User.deleteMany({}),
+    Group.deleteMany({})
+  ])
 
   const saltRounds = 10
 
@@ -34,9 +40,18 @@ beforeEach(async () => {
   const user = await User.findOne({ username: helper.initialUsers[0].username })
   userId = user._id.toString()
 
+  const groupsIds = []
+  for (let group of helper.initialGroups) {
+    let GroupObject = new Group({ ...group, creator: userId })
+    let savedGroups = await GroupObject.save()
+    groupsIds.push(savedGroups._id.toString())
+  }
+
+  groupsAtStart = await helper.groupsInDb()
+
   const eventIds = []
   for (let event of helper.initialEvents) {
-    let eventObject = new Event({ ...event, user: userId })
+    let eventObject = new Event({ ...event, user: userId, groups: groupsIds })
     let savedEvent = await eventObject.save()
     eventIds.push(savedEvent._id.toString())
   }
@@ -71,7 +86,6 @@ describe('Creating events', () => {
         price: 9.99,
         capacity: 100,
         description: 'Second Test Event description',
-        group: 'Tests',
         place: 'Sydney'
       })
       .expect(200)
@@ -254,6 +268,24 @@ describe('Updating events', () => {
       .send(newEvent)
       .expect(401)
 
+    done()
+  })
+})
+
+describe('Creating groups', () => {
+  test('if group is created by logged in user and saved as json', async done => {
+    await api
+      .post('/api/groups')
+      .set('Authorization', `Bearer ${loginInfo.token}`)
+      .send({
+        name: 'Test Groups',
+        description: 'Something about this group'
+      })
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    const groupsAtEnd = await helper.groupsInDb()
+    expect(groupsAtEnd.length).toBe(groupsAtStart.length + 1)
     done()
   })
 })

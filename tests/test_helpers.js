@@ -1,5 +1,6 @@
 const Event = require('../models/events')
 const User = require('../models/users')
+const Group = require('../models/groups')
 
 const initialEvents = [
   {
@@ -8,7 +9,6 @@ const initialEvents = [
     price: 9.99,
     capacity: 100,
     description: 'First Test Event description',
-    group: 'Tests',
     place: 'Melbourne'
   },
   {
@@ -17,7 +17,6 @@ const initialEvents = [
     price: 9.99,
     capacity: 100,
     description: 'Second Test Event description',
-    group: 'Tests',
     place: 'Sydney'
   }
 ]
@@ -43,6 +42,21 @@ const initialUsers = [
   }
 ]
 
+const initialGroups = [
+  {
+    name: 'Coding',
+    description: 'Learn how to code'
+  },
+  {
+    name: 'Cooking',
+    description: 'Learn how to cook'
+  },
+  {
+    name: 'Danicing',
+    description: 'Learn how to dance'
+  }
+]
+
 const nonExistingEventId = async () => {
   const event = new Event({
     date: new Date(),
@@ -50,7 +64,6 @@ const nonExistingEventId = async () => {
     price: 9.99,
     capacity: 100,
     description: 'Second Test Event description',
-    group: 'Tests',
     place: 'Sydney'
   })
 
@@ -82,11 +95,18 @@ const usersInDb = async () => {
   return users.map(user => user.toJSON())
 }
 
+const groupsInDb = async () => {
+  const groups = await Group.find({})
+  return groups.map(group => group.toJSON())
+}
+
 module.exports = {
   initialEvents,
   initialUsers,
+  initialGroups,
   nonExistingEventId,
   nonExistingUserId,
   eventsInDb,
-  usersInDb
+  usersInDb,
+  groupsInDb
 }
