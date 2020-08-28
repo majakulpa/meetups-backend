@@ -290,6 +290,22 @@ describe('Creating groups', () => {
   })
 })
 
+describe('Book an event', () => {
+  test('if not logged user can book an event', async done => {
+    await api.post(`/api/events/${eventToTakeActions.id}`).expect(401)
+    done()
+  })
+  test('if logged user can book an event', async done => {
+    await api
+      .post(`/api/events/${eventToTakeActions.id}`)
+      .set('Authorization', `Bearer ${loginInfo.token}`)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    done()
+  })
+})
+
 afterAll(() => {
   mongoose.connection.close()
 })
