@@ -25,6 +25,7 @@ groupsRouter.post('/', async (req, res) => {
   const group = new Group({
     name: body.name,
     description: body.description,
+    mainImage: body.mainImage,
     creator: user._id
   })
 

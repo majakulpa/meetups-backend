@@ -11,6 +11,7 @@ const groupsRouter = require('./controllers/groups')
 const middleware = require('./utils/middleware')
 const logger = require('./utils/logger')
 const mongoose = require('mongoose')
+const multer = require('multer')
 
 logger.info('connecting to', config.MONGODB_URI)
 

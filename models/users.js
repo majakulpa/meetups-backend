@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema({
     unique: true
   },
   description: String,
+  profileImage: String,
   passwordHash: String,
   events: [
     {

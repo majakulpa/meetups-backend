@@ -4,6 +4,7 @@ const User = require('./../models/users')
 const Booking = require('./../models/bookings')
 const Event = require('./../models/events')
 const Group = require('../models/groups')
+const fs = require('fs')
 
 usersRouter.post('/', async (req, res) => {
   const body = req.body
@@ -16,6 +17,7 @@ usersRouter.post('/', async (req, res) => {
     name: body.name,
     email: body.email,
     description: body.description,
+    profileImage: body.profileImage,
     groups: body.groups,
     passwordHash
   })
