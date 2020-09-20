@@ -4,11 +4,9 @@ const User = require('./../models/users')
 const Booking = require('./../models/bookings')
 const Event = require('./../models/events')
 const Group = require('../models/groups')
-const fs = require('fs')
 
 usersRouter.post('/', async (req, res) => {
   const body = req.body
-
   const saltRounds = 10
   const passwordHash = await bcrypt.hash(body.password, saltRounds)
 
@@ -91,6 +89,9 @@ usersRouter.patch('/:id', async (req, res) => {
   }
   if (body.description) {
     userToUpdate.description = body.description
+  }
+  if (body.profileImage) {
+    userToUpdate.profileImage = body.profileImage
   }
 
   const savedUser = await userToUpdate.save()

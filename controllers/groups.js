@@ -102,6 +102,9 @@ groupsRouter.patch('/:id', async (req, res) => {
   if (body.description) {
     groupToUpdate.description = body.description
   }
+  if (body.mainImage) {
+    groupToUpdate.mainImage = body.mainImage
+  }
 
   const savedGroup = await groupToUpdate.save()
   res.json(savedGroup.toJSON())
