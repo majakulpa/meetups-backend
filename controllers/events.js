@@ -50,7 +50,7 @@ eventsRouter.post('/', async (req, res) => {
 eventsRouter.get('/', async (req, res) => {
   const events = await Event.find({})
     .populate('user', { name: 1, email: 1 })
-    .populate('attendees', { name: 1, email: 1 })
+    .populate('attendees', { name: 1, email: 1, profileImage: 1 })
     .populate('groups', { name: 1 })
   res.json(events.map(event => event.toJSON()))
 })
@@ -59,9 +59,10 @@ eventsRouter.get('/:id', async (req, res) => {
   const event = await Event.findById(req.params.id)
     .populate('user', {
       name: 1,
-      email: 1
+      email: 1,
+      profileImage: 1
     })
-    .populate('attendees', { name: 1, email: 1 })
+    .populate('attendees', { name: 1, email: 1, profileImage: 1 })
     .populate('groups', { name: 1 })
   if (event) {
     res.json(event.toJSON())
