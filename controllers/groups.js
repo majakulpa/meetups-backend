@@ -46,8 +46,8 @@ groupsRouter.get('/', async (req, res) => {
 
 groupsRouter.get('/:id', async (req, res) => {
   const group = await Group.findById(req.params.id)
-    .populate('creator', { name: 1, email: 1 })
-    .populate('members', { name: 1, email: 1 })
+    .populate('creator', { name: 1, email: 1, profileImage: 1 })
+    .populate('members', { name: 1, email: 1, profileImage: 1 })
     .populate({
       path: 'events',
       model: Event
