@@ -7,7 +7,8 @@
     "start": "cross-env NODE_ENV=development nodemon index.js",
     "lint": "eslint .",
     "test": "cross-env NODE_ENV=test jest --verbose --runInBand",
-    "test:watch": "cross-env NODE_ENV=test jest --verbose --runInBand --watch"
+    "test:watch": "cross-env NODE_ENV=test jest --verbose --runInBand --watch",
+    "start:test": "cross-env NODE_ENV=test node index.js"
   },
   "author": "Maja Kulpa-Malecka",
   "license": "ISC",
@@ -24,6 +25,7 @@
     "morgan": "^1.10.0"
   },
   "devDependencies": {
+    "cypress": "^5.3.0",
     "eslint": "^7.3.1",
     "jest": "^26.1.0",
     "supertest": "^4.0.2"
